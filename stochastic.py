@@ -40,21 +40,6 @@ class Values(object):
         column_vector *= self.v_0
         return column_vector
 
-    # def pdf(self):                                              #This is for the pdf function
-
-    #     meshpoints = np.linspace(self.t0, self.T, self.N + 1)
-    #     column_vector = np.zeros((self.N + 1, 1))
-    #     norm.pdf(x=0, loc= 0, scale = self.deltat)                          #loc is mean, scale is variance
-    #     j = 0
-    #     for i in range(len(meshpoints)):   
-    #         if i == j:
-    #             column_vector[i] = norm.pdf(meshpoints[j])
-    #             j += 1
-    #         else:  
-    #             continue
-    #     #column_vector = column_vector[:-1]
-    #     return column_vector
-   
 
     def delta_w_test(self): 
         mean, sd = 0, np.sqrt(self.deltat) #following command uses sd and not variance so take sqrt
@@ -99,12 +84,11 @@ class trapezoidal(Values):
     
 
 
-
-class Graph(trapezoidal, Values):                                                    #Created this class so when Numerical Method 2 is implemented it will inherit from it as well
+class Graph(trapezoidal, Values):                                                    
     
     def graph(self):
 
-        meshpoints = np.linspace(self.t0, self.T, self.N + 1).transpose() #This creats our equally spaced t values needed for our plots
+        meshpoints = np.linspace(self.t0, self.T, self.N + 1).transpose() 
 
         plt.rcParams['lines.linewidth'] = 3
         colors = ["coral","silver", "burlywood","lightgreen", "plum"]
@@ -130,20 +114,14 @@ class Graph(trapezoidal, Values):                                               
                 plt.ylabel('Function',size=14)
                 
                           
-            except ValueError:                                              #This tends to be the most common mistake for me...wrong sized arrays
+            except ValueError:                                              
                 print('~~~ARRAYS ARE NOT THE SAME SIZE~~~')
 
         plt.figure(1, figsize=(12,10))
         plt.plot(meshpoints, mean_matrix, color = 'grey', linestyle = 'dashed')
-        #plt.plot(meshpoints, self.variance(), color = 'grey', linestyle = 'dashed' ) 
-
-
-
-
+    
         plt.figure(2, figsize=(12,10))
         plt.plot(meshpoints, mean_matrix, color = 'grey', linestyle = 'dashed')
-        #plt.plot(meshpoints, self.variance_trapezoidal(), color = 'grey', linestyle = 'dashed' )
-
  
         plt.legend()
         plt.show()
@@ -152,7 +130,7 @@ class Graph(trapezoidal, Values):                                               
 
 
 def main():
-    numerical_method = Values(0, 1, 500)                             #instantiates the above class and methods
+    numerical_method = Values(0, 1, 500)                             
     numerical_method.solution()
     trap = trapezoidal(0, 1, 500)
     trap.matrix()
@@ -160,5 +138,5 @@ def main():
     plotting_class = Graph(0, 1, 500)
     plotting_class.graph()
 
-if __name__ == "__main__":                                         #since running program as main file
+if __name__ == "__main__":                                        
     main()
