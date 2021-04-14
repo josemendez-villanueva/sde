@@ -15,6 +15,7 @@ class Values(object):
         self.v_0 = 0
         self.sigma = .6
         self.b = 4
+        self.grav = .2
 
     def Matrix(self):
         matrix = toeplitz(c=[1, *np.arange(2, self.N + 1)], r=np.arange(1,self.N+1))
@@ -32,15 +33,15 @@ class Values(object):
         column_vector *= self.v_0
         return column_vector
 
-    def delta_w_test(self): 
-        mean, sd = 0, np.sqrt(self.deltat) #following command uses sd and not variance so take sqrt
-        random_values = np.random.normal(mean, sd, self.N)
+    def delta_w_test(self):    
+        mean, sd = 0, np.sqrt(self.deltat) #following command uses sd and not variance so take sqrt  
+        random_values = np.random.normal(mean, sd, self.N) 
         random_vector = np.reshape(random_values, (self.N, 1))
         return random_vector
 
     def solution(self):                                                                                                                       
-        mm = self.sigma * np.matmul(self.uppertriangular(), self.delta_w_test())                                                                      
-        solution_matrix = mm + self.exponential_matrix()
+        mm = self.sigma * np.matmul(self.uppertriangular(), self.delta_w_test())       #Added grav here                                                            
+        solution_matrix = mm + self.exponential_matrix() + self.grav   #############grav constant added
         solution_matrix = np.insert(solution_matrix, 0, self.v_0)   #The third parameter will be the initial value added, the second paramter is for position in array
         solution_matrix = solution_matrix.transpose()
         return solution_matrix
@@ -57,7 +58,7 @@ class trapezoidal(Values):
     def matrix(self):
         trap_matrix = (self.sigma * (1 + np.exp(self.b * self.deltat))  / 2   ) * self.uppertriangular ()
         matrix_multiplication = np.matmul(trap_matrix, self.delta_w_test() )
-        solution =  matrix_multiplication + self.exponential_matrix()
+        solution =  matrix_multiplication + self.exponential_matrix() + self.grav #############grav constant added
         solution = np.insert(solution, 0, self.v_0)
         solution = solution.transpose()
         return solution
@@ -95,40 +96,48 @@ class bounded_position(trapezoidal, Values):
         x = np.zeros( (self.N + 1, 1) )
         velocity_vector = self.solution()
 
-        for i in range(1, self.N+1): 
-            x[i] = x[i - 1] + ( velocity_vector[i-1] * self.deltat)
-            if x[i] <= 0.10000 and x[i] >= -0.10000 :
-                x[i] = x[i - 1] + ( velocity_vector[i-1] * self.deltat)              
-            elif x[i] > 0.10000:
-                x[i] = x[i - 1] + ( -velocity_vector[i-1] * self.deltat)
-            elif x[i] < -0.10000:
-                x[i] = x[i - 1] + ( -velocity_vector[i-1] * self.deltat)
+        # for i in range(1, self.N+1): 
+        #     x[i] = x[i - 1] + ( velocity_vector[i-1] * self.deltat)
+        #     if x[i] <= 0.10000 and x[i] >= -0.10000 :
+        #         x[i] = x[i - 1] + ( velocity_vector[i-1] * self.deltat)              
+        #     elif x[i] > 0.10000:
+        #         x[i] = x[i - 1] + ( -velocity_vector[i-1] * self.deltat)
+        #     elif x[i] < -0.10000:
+        #         x[i] = x[i - 1] + ( -velocity_vector[i-1] * self.deltat)
         
-            else:
-                print('ERROR')
+        #     else:
+        #         print('ERROR')
+
+        bound = .10000
+        for i in range(1, self.N+1): 
+          velocity = (velocity_vector[i] + velocity_vector[i - 1]) / 2
+          x[i] = x[i - 1] + ( velocity * self.deltat)
+        
+        while max(abs(x)) > bound:
+            x[x<-bound] = -x[x<-bound] -2*bound
+            x[x>bound] = -x[x>bound] + 2*bound
+
 
         return x
+
 
     def bounded_trap(self):
         x = np.zeros( (self.N + 1, 1) )
         velocity_vector = self.matrix()
-
+        bound = .10000
         for i in range(1, self.N+1): 
-            velocity = (velocity_vector[i] + velocity_vector[i - 1]) / 2
-            x[i] = x[i - 1] + ( velocity * self.deltat)
-            if x[i] <= 0.10000 and x[i] >= -0.10000 :
-                x[i] = x[i - 1] + ( velocity * self.deltat)              
-            elif x[i] > 0.10000:
-                velocity = -velocity
-                x[i] = x[i - 1] + ( velocity * self.deltat)
-            elif x[i] < -0.10000:
-                velocity = -velocity
-                x[i] = x[i - 1] + ( velocity* self.deltat)
+          velocity = (velocity_vector[i] + velocity_vector[i - 1]) / 2
+          x[i] = x[i - 1] + ( velocity * self.deltat)
         
-            else:
-                print('ERROR')
+        while max(abs(x)) > bound:
+            x[x<-bound] = -x[x<-bound] -2*bound
+            x[x>bound] = -x[x>bound] + 2*bound
+
 
         return x
+
+
+
 
     #Expected Value for these values from above is 0 since E[X_0] is 0 and so is E[V_0]
 
@@ -153,38 +162,38 @@ class bounded_position(trapezoidal, Values):
 
 
 
-
     
 class Graph(bounded_position, position, trapezoidal, Values):                                                    
     def graph(self):
+        #np.random.seed(0)
         meshpoints = np.linspace(self.t0, self.T, self.N + 1).transpose() 
-        plt.rcParams['lines.linewidth'] = 3
+        plt.rcParams['lines.linewidth'] = 1
         colors = ["coral","silver", "burlywood","lightgreen", "plum"]
         mean_matrix = self.exponential_matrix()
         mean_matrix = np.insert(mean_matrix, 0, 0) #Hard coding first expected value here
         for i in range(5):
             try:
-                plt.figure(1, figsize=(12,10))
-                plt.plot(meshpoints, self.solution(), label = "Path " + str(i+1), color=colors[i]) 
-                plt.title('Left-Point Method - Velocity')
-                plt.xlabel('t', size=14)
-                plt.ylabel('Function',size=14)
-                plt.legend()
-                    
-                plt.figure(2, figsize=(12,10) )
-                plt.plot(meshpoints, self.matrix(), label = "Path " + str(i+1), color=colors[i])
-                plt.title('Trapezoidal Method - Velocity')
-                plt.xlabel('t', size=14)
-                plt.ylabel('Function',size=14)
-                
-                # plt.figure(3, figsize=(12,10))
-                # plt.plot(meshpoints, self.lp_iteration(), label = "Path " + str(i+1), color=colors[i]) 
-                # plt.title('Left-Point Method - Position')
+                # plt.figure(1, figsize=(12,10))
+                # plt.plot(meshpoints, self.solution(), label = "Path " + str(i+1), color=colors[i]) 
+                # plt.title('Left-Point Method - Velocity')
                 # plt.xlabel('t', size=14)
                 # plt.ylabel('Function',size=14)
                 # plt.legend()
+                    
+                # plt.figure(2, figsize=(12,10) )
+                # plt.plot(meshpoints, self.matrix(), label = "Path " + str(i+1), color=colors[i])
+                # plt.title('Trapezoidal Method - Velocity')
+                # plt.xlabel('t', size=14)
+                # plt.ylabel('Function',size=14)
                 
-                # plt.figure(4, figsize=(12,10))
+                # # plt.figure(3, figsize=(12,10))
+                # # plt.plot(meshpoints, self.lp_iteration(), label = "Path " + str(i+1), color=colors[i]) 
+                # # plt.title('Left-Point Method - Position')
+                # # plt.xlabel('t', size=14)
+                # # plt.ylabel('Function',size=14)
+                # # plt.legend()
+                
+                # plt.figure(3, figsize=(12,10))
                 # plt.plot(meshpoints, self.trapezoidal_iteration(), label = "Path " + str(i+1), color=colors[i]) 
                 # plt.title('Trapezoidal Method - Position')
                 # plt.xlabel('t', size=14)
@@ -205,18 +214,19 @@ class Graph(bounded_position, position, trapezoidal, Values):
                 plt.ylabel('Function',size=14)
                 plt.legend()
 
-
-        
             except ValueError:                                              
                 print('~~~ARRAYS ARE NOT THE SAME SIZE~~~')
-
-        plt.figure(1, figsize=(12,10))
-        plt.plot(meshpoints, mean_matrix, color = 'grey', linestyle = 'dashed')
-        plt.plot(meshpoints, np.sqrt(self.variance()), color = 'grey', linestyle = 'dashed')
     
-        plt.figure(2, figsize=(12,10))
-        plt.plot(meshpoints, mean_matrix, color = 'grey', linestyle = 'dashed')
-        plt.plot(meshpoints, np.sqrt(self.variance_trapezoidal()), color = 'grey', linestyle = 'dashed')
+        ##                          ##
+        # plt.figure(1, figsize=(12,10))
+        # plt.plot(meshpoints, mean_matrix, color = 'grey', linestyle = 'dashed')
+        # plt.plot(meshpoints, np.sqrt(self.variance()), color = 'grey', linestyle = 'dashed')
+    
+        # plt.figure(2, figsize=(12,10))
+        # plt.plot(meshpoints, mean_matrix, color = 'grey', linestyle = 'dashed')
+        # plt.plot(meshpoints, np.sqrt(self.variance_trapezoidal()), color = 'grey', linestyle = 'dashed')
+
+        ##the above are still used##
 
         # plt.figure(3, figsize=(12,10))
         # plt.plot(meshpoints, self.expected_leftpoint(), color = 'grey', linestyle = 'dashed')
