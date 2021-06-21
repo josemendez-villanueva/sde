@@ -74,6 +74,8 @@ class Values(object):
                 z = int(h/2)
                 for j in range(1, h):
                     list[j] = np.round(x[i-1] + (time[j])*(self.T/h)*j, 3)
+
+
                 for g in range(1,z):
                     if list[z] < -0.1000:
                         #only thing changing is the list[z,g] indexing
@@ -121,108 +123,21 @@ class Values(object):
                             solution = self.main_equation()
                             dummy = x[i+1]
                             
-
-
-                # for j in range(1, h):
-                #     list_1[j] = np.round(x[i] + (time_1[j])*(self.T/h)*j, 4)
-                #     print(list_1[j])
-        
-                # while j < h:
-                #     h = h/2
-                #     if list[h] < -.1000:
-                #         start = h/2
-                #         list[start + i] = np.round(x[i] + (time[j])*(self.T/h)*j, 4)
-                #         j += 1
-                #     else:
-                #         if list[h] > -.1000:
-                #             end = h/2
-                #             list[end - i] = np.round(x[i] + (time[j])*(self.T/h)*j, 4)
-                #             j += 1
-
-
-
-
-
-                    # if isclose(list[j], -0.10, rel_tol=.0009):
-                    #     print(list[j])
-                    # else:
-                    #     break
-
-                  
-
-
-            
-            # elif x[i] < -0.10000:
-            #     xx = np.zeros( (Nn + 1, 1) )
-            #     z_i_l = np.linspace(solution[i-1], solution[i], Nn)
-            #     dum = np.full(Nn+1, x[i-1])
-            #     record_t = i*self.deltat
-            #     for j in range(1,Nn):
-            #         xx[j] = dum[j-1] + ( z_i_l[j] * (record_t - (self.T/Nn)*j)) 
-            #         if isclose(xx[i], -0.10, rel_tol=.09):
-            #             record_t = (self.T/Nn)*j                 #this record_t will have the delta t for that step
-            #             x[i] = x[i-1] + ( xx[j] * record_t)
-            #             self.v_0 = -z_i_l[j]
-            #             solution = self.main_equation()
-            #             x[i+1] = x[i] + (solution[i] *(self.deltat - record_t)) #it should now be followinng th egrid after this
-            #             break             
-            #         else:
-            #             continue
-
-            # elif x[i] > 0.10000:
-            #     xxx = np.zeros( (Nn + 1, 1) )
-            #     zz_i_l = np.linspace(solution[i-1], solution[i], Nn)
-            #     ddum = np.full(Nn+1, x[i-1])
-            #     rrecord_t = i*self.deltat
-            #     for j in range(1,Nn):
-            #         xxx[j] = ddum[j-1] + ( zz_i_l[j] * (rrecord_t - (self.T/Nn)*j)) 
-            
-            #         if isclose(xxx[i], 0.10, rel_tol=.009):
-            #             rrecord_t = (self.T/Nn)*j                 #this record_t will have the delta t for that step
-            #             x[i] = x[i-1] + (zz_i_l[j] * (rrecord_t + (self.T/Nn)*j))
-            #             print(x[i])
-            #             self.v_0 = -zz_i_l[j]
-            #             solution = self.main_equation()
-            #             x[i+1] = x[i] + (solution[i] * (self.deltat - rrecord_t)) #it should now be followinng th egrid after this
-            #             dummy = x[i+1]
-            #             break             
-            #         else:
-            #             continue
-
-          
-                #print('i-1:',solution[i-1],'i:',solution[i] )
-
         return x
-'''
-            elif x[i] > 0.10000:
-                            
-                x[i] = x[i - 1] + ( -solution[i-1] * self.deltat)
-                self.v_0 = -solution[i-1]
-                solution = self.main_equation()
-                velocity = self.main_equation()
-               
+
+
             # incorporate intersection...(look where it hit the boundary) then at that time make it reflect back and hit ht enext time grid
             #go from un-uniform grid to uniform grid for that time step
             #####This will be the test implimentation to check to see if this works####
-            # elif x[i] < -0.10000:
-            ###Working Code below###
-            elif x[i] < -0.10000:
-                
-                x[i] = x[i - 1] + ( -solution[i-1] * self.deltat)
-                self.v_0 = solution[i-1]
-                solution = self.main_equation()
-                #vel_vec = self.main_equation()
-               
-                            
-            else:
-                print('error')
-'''
+
 
    
 class Graph(Values):   
         def graph(self):
 
             meshpoints = np.linspace(self.t0, self.T, self.N + 1).transpose() 
+            y = np.full(1001, -.1000)
+            y1 = np.full(1001, .1000)
             plt.rcParams['lines.linewidth'] = 2
             colors = ["coral","silver", "burlywood","lightgreen", "plum"]
 
@@ -230,12 +145,16 @@ class Graph(Values):
 
                 plt.figure(1, figsize=(12,10))
                 plt.plot(meshpoints, self.iteration() , label = "Path " + str(i+1), color=colors[i]) 
-                plt.title('Trapezoidal Method - Bounded Position')
-                plt.xlabel('t', size=14)
-                plt.ylabel('Function',size=14)
+                plt.title('Bounded Position')
+                plt.xlabel('Time', size=14)
+                plt.ylabel('Position',size=14)
             
-        
+            plt.figure(1, figsize=(12,10))
+            plt.plot(meshpoints, y, color = 'silver', linestyle = 'dashed', linewidth = 1.15)
+            plt.plot(meshpoints, y1, color = 'silver', linestyle = 'dashed', linewidth = 1.15)        
+
             plt.legend()
+            # plt.tight_layout()
             plt.show()
 
 
