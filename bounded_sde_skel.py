@@ -62,66 +62,93 @@ class Values(object):
                 # dummy vairable is created in elif statements below but is used here in order to
                 #skip an iteration that is created there....
 
-                if dummy == x[i]:
-                    continue
-                else:
-                    x[i] = x[i - 1] + ( solution[i] * self.deltat) 
+                # if dummy == x[i]:
+                #     continue
+                # else:
+                x[i] = x[i - 1] + ( solution[i] * self.deltat) 
 
             elif x[i] < -0.1000:
-                h = 5000
-                list = np.zeros((h+1, 1))
-                time = np.linspace(solution[i-1], solution[i], h)
-                z = int(h/2)
-                for j in range(1, h):
-                    list[j] = np.round(x[i-1] + (time[j])*(self.T/h)*j, 3)
+                x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 4)
+                #Make the new dt
+                dt =  np.abs(((-.1000 -x[i-1]) / solution[i-1]))
+                #Redifine x[i] for when it is at the boundary
+                x[i] = np.round(x[i - 1] + ( solution[i-1] * dt), 4)
+                #Now define new Initial Values since reflecting back
+                self.v0 = -solution[i-1]
+                solution = self.main_equation()
 
 
-                for g in range(1,z):
-                    if list[z] < -0.1000:
-                        #only thing changing is the list[z,g] indexing
-                        list[z - g] = np.round(x[i-1] + (time[(z - g)])*(self.T/h)*(z - g), 3)
-                        if isclose(list[z-g], -0.1000, rel_tol= tol):
-                            x[i] = np.round(x[i-1] + (list[z-g] * (self.T/h)*(z - g)), 3)
-                            x[i+1] = np.round(x[i] + (-list[z-g] * (self.deltat - (self.T/h)*(z - g))), 3)
-                            self.v0 = -list[z-g]
-                            solution = self.main_equation()
-                            dummy = x[i+1]
+            elif x[i] > 0.1000:
+                x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 4)
+                dt =  np.abs(((.1000 - x[i-1]) / solution[i-1]))
+                x[i] = np.round(x[i - 1] + ( solution[i-1] * dt), 4)
+                #Step it at the new founded time t since that wil give you the point in wihcihc it crosses or grid size
+                self.v0 = -solution[i-1]
+                solution = self.main_equation()
+
+
+            
+# deltat = x[j-1] / solution[i-1 ]
+# let x[j] be zero and find deltat for when it crosses over
+# save that time step anfd swap it out, it will change the gri but it doesnt matter
+#then set the x0 to 0 and that v0 flipped and continue from there
+
+
+
+                # h = 5000
+                # list = np.zeros((h+1, 1))
+                # time = np.linspace(solution[i-1], solution[i], h)
+                # z = int(h/2)
+                # for j in range(1, h):
+                #     list[j] = np.round(x[i-1] + (time[j])*(self.T/h)*j, 3)
+
+
+                # for g in range(1,z):
+                #     if list[z] < -0.1000:
+                #         #only thing changing is the list[z,g] indexing
+                #         list[z - g] = np.round(x[i-1] + (time[(z - g)])*(self.T/h)*(z - g), 3)
+                #         if isclose(list[z-g], -0.1000, rel_tol= tol):
+                #             x[i] = np.round(x[i-1] + (list[z-g] * (self.T/h)*(z - g)), 3)
+                #             x[i+1] = np.round(x[i] + (-list[z-g] * (self.deltat - (self.T/h)*(z - g))), 3)
+                #             self.v0 = -list[z-g]
+                #             solution = self.main_equation()
+                #             dummy = x[i+1]
                             
-                    else:
-                        list[z + g] = np.round(x[i-1] + (time[z + g])*(self.T/h)*(z + g), 3)
-                        if isclose(list[z+g], -0.1000, rel_tol= tol):
-                            x[i] = np.round(x[i-1] + (list[z+g] * (self.T/h)*(z + g)), 3)
-                            x[i+1] = np.round(x[i] + (-list[z+g] * (self.deltat - (self.T/h)*(z + g))), 3)
-                            self.v0 = -list[z+g]
-                            solution = self.main_equation()
-                            dummy = x[i+1]
+                #     else:
+                #         list[z + g] = np.round(x[i-1] + (time[z + g])*(self.T/h)*(z + g), 3)
+                #         if isclose(list[z+g], -0.1000, rel_tol= tol):
+                #             x[i] = np.round(x[i-1] + (list[z+g] * (self.T/h)*(z + g)), 3)
+                #             x[i+1] = np.round(x[i] + (-list[z+g] * (self.deltat - (self.T/h)*(z + g))), 3)
+                #             self.v0 = -list[z+g]
+                #             solution = self.main_equation()
+                #             dummy = x[i+1]
                             
                                   
 
-            elif x[i] > 0.1000:
-                h = 5000
-                list1 = np.zeros((h+1, 1))
-                time1 = np.linspace(solution[i-1], solution[i], h)
-                z = int(h/2)
-                for j in range(1, h):
-                    list1[j] = np.round(x[i-1] + (time1[j])*(self.T/h)*j, 3)
-                for g in range(1,z):
-                    if list1[z] < 0.1000:
-                        list1[z + g] = np.round(x[i-1] + (time1[z+g])*(self.T/h)*(z+g), 3)
-                        if isclose(list1[z+g], 0.1000, rel_tol= tol):
-                            x[i] = np.round(x[i-1] + (list1[z+g] * (self.T/h)*(z+g)), 3)
-                            x[i+1] = np.round(x[i] + (-list1[z+g] * (self.deltat - (self.T/h)*(z+g))), 3)
-                            self.v0 = -list1[z+g]
-                            solution = self.main_equation()
-                            dummy = x[i+1]
-                    else:
-                        list1[z - g] = np.round(x[i-1] + (time1[z-g])*(self.T/h)*(z-g), 3)
-                        if isclose(list1[z-g], 0.1000, rel_tol= tol):
-                            x[i] = np.round(x[i-1] + (list1[z-g] * (self.T/h)*(z - g)), 3)
-                            x[i+1] = np.round( x[i] + (-list1[z-g] * (self.deltat - (self.T/h)*(z - g))), 3)
-                            self.v0 = -list1[z-g]
-                            solution = self.main_equation()
-                            dummy = x[i+1]
+            # elif x[i] > 0.1000:
+            #     h = 5000
+            #     list1 = np.zeros((h+1, 1))
+            #     time1 = np.linspace(solution[i-1], solution[i], h)
+            #     z = int(h/2)
+            #     for j in range(1, h):
+            #         list1[j] = np.round(x[i-1] + (time1[j])*(self.T/h)*j, 3)
+            #     for g in range(1,z):
+            #         if list1[z] < 0.1000:
+            #             list1[z + g] = np.round(x[i-1] + (time1[z+g])*(self.T/h)*(z+g), 3)
+            #             if isclose(list1[z+g], 0.1000, rel_tol= tol):
+            #                 x[i] = np.round(x[i-1] + (list1[z+g] * (self.T/h)*(z+g)), 3)
+            #                 x[i+1] = np.round(x[i] + (-list1[z+g] * (self.deltat - (self.T/h)*(z+g))), 3)
+            #                 self.v0 = -list1[z+g]
+            #                 solution = self.main_equation()
+            #                 dummy = x[i+1]
+            #         else:
+            #             list1[z - g] = np.round(x[i-1] + (time1[z-g])*(self.T/h)*(z-g), 3)
+            #             if isclose(list1[z-g], 0.1000, rel_tol= tol):
+            #                 x[i] = np.round(x[i-1] + (list1[z-g] * (self.T/h)*(z - g)), 3)
+            #                 x[i+1] = np.round( x[i] + (-list1[z-g] * (self.deltat - (self.T/h)*(z - g))), 3)
+            #                 self.v0 = -list1[z-g]
+            #                 solution = self.main_equation()
+            #                 dummy = x[i+1]
                             
         return x
 
