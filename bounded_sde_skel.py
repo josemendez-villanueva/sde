@@ -51,12 +51,12 @@ class Values(object):
         solution = self.main_equation()
   
         for i in range(1, N+1): 
-            x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 4)
+            x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 6)
             if x[i] <= 0.1000 and x[i] >= -0.1000 :
                 x[i] = x[i - 1] + ( solution[i] * self.deltat) 
 
             elif x[i] < -0.1000:
-                x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 4)
+                x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 6)
                 #Make the new dt
                 dt =  np.abs(((-.1000 -x[i-1]) / solution[i-1]))
                 #Redefine x[i] for when it is at the boundary
@@ -66,7 +66,7 @@ class Values(object):
                 solution = self.main_equation()
 
             elif x[i] > 0.1000:
-                x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 4)
+                x[i] = np.round(x[i - 1] + ( solution[i-1] * self.deltat), 6)
                 dt =  np.abs(((.1000 - x[i-1]) / solution[i-1]))
                 x[i] = np.round(x[i - 1] + ( solution[i-1] * dt), 4)
                 #Step it at the new founded time t since that wil give you the point in wihcihc it crosses or grid size
